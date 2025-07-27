@@ -4,7 +4,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
 
 
 @pytest.fixture
@@ -23,75 +22,43 @@ def driver():
 
 def test_calculator(driver):
     # Открытие страницы калькулятора
-    (driver.get
-     ("https://bonigarcia.dev/selenium-webdriver-java/slow-calculator.html"))
+    driver.get("https://bonigarcia.dev/selenium-webdriver-java/slow-calculator.html")
 
     # Ввод задержки
     delay_input = driver.find_element(By.CSS_SELECTOR, "#delay")
     delay_input.clear()  # Очищаем поле перед вводом
-    delay_input.send_keys("45")
+    delay_input.send_keys("45")  # Задаем задержку в 45 секунд
 
-    # Добавляем паузу после ввода задержки
-    time.sleep(2)
-
-    # Функция для клика по кнопкам с дополнительной проверкой
+    # Функция для клика по кнопкам
     def click_button(button_text):
-        try:
-            # Ждем появления кнопки
-            button = WebDriverWait(driver, 30).until(
-                EC.element_to_be_clickable
-                ((By.XPATH,
-                  f"//span[contains(@class, 'btn') and text()='"
-                  f"{button_text}']"))
-            )
-
-            # Проверяем, что кнопка активна и видима
-            if button.is_enabled() and button.is_displayed():
-                button.click()
-                print(f"Нажата кнопка: {button_text}")
-            else:
-                raise (Exception
-                       (f"Кнопка {button_text} не активна или не видна"))
-
-        except Exception as e:
-            print(f"Ошибка при клике на кнопку {button_text}: {str(e)}")
-            raise
-
-    try:
-        # Нажимаем кнопки последовательно
-        click_button('7')
-        click_button('+')
-        click_button('8')
-        click_button('=')
-
-        # Увеличенный пауза после нажатия "="
-        time.sleep(20)  # Увеличено до 20 секунд
-
-        # Используйте правильный XPath для поиска результата
-        result = WebDriverWait(driver, 300).until(  # 5 минут ожидания
-            EC.visibility_of_element_located(
-                (By.XPATH, "//*[@id='calculator']/div[1]/div")
+        # Ждем появления кнопки и проверяем, что она кликабельна
+        button = WebDriverWait(driver, 30).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, f"//span[contains(@class, 'btn') and text()='{button_text}']")
             )
         )
+        button.click()  # Кликаем по кнопке
+        print(f"Нажата кнопка: {button_text}")
 
-        # Ждем, пока результат обновится до финального значения
-        WebDriverWait(driver, 120).until(
-            lambda d: d.find_element(By.XPATH,
-                                     "//*[@id='calculator']"
-                                     "/div[1]/div").text == "15"
+    # Нажимаем кнопки последовательно
+    click_button('7')
+    click_button('+')
+    click_button('8')
+    click_button('=')
+
+    # Ожидаем, пока результат обновится до нужного значения
+    result_element = WebDriverWait(driver, 45).until(
+        EC.text_to_be_present_in_element(
+            (By.XPATH, "//*[@id='calculator']/div[1]/div"), "15"
         )
+    )
 
-        # Получаем финальный результат
-        final_result = result.text
-        print(f"Полученный результат: {final_result}")
+    # Если результат оказался неверным и не соответствует ожиданиям
+    if not result_element:
+        result_text = driver.find_element(By.XPATH, "//*[@id='calculator']/div[1]/div").text
+        assert result_text == "15", f"Ожидалось 15, получено {result_text}"
 
-        # Проверяем полученный результат
-        assert final_result == "15", f"Ожидалось 15, получено {final_result}"
-        print("Тест пройден успешно!")
-
-    except Exception as e:
-        print(f"Произошла ошибка: {str(e)}")
-        raise
+    print("Тест пройден успешно!")
 
 
 if __name__ == "__main__":
