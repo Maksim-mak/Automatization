@@ -5,7 +5,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
 @pytest.fixture
 def driver():
     # Настройка Chrome драйвера
@@ -18,7 +17,6 @@ def driver():
     driver = webdriver.Chrome(service=service, options=options)
     yield driver
     driver.quit()
-
 
 def test_calculator(driver):
     # Открытие страницы калькулятора
@@ -38,7 +36,6 @@ def test_calculator(driver):
             )
         )
         button.click()  # Кликаем по кнопке
-        print(f"Нажата кнопка: {button_text}")
 
     # Нажимаем кнопки последовательно
     click_button('7')
@@ -53,13 +50,6 @@ def test_calculator(driver):
         )
     )
 
-    # Если результат оказался неверным и не соответствует ожиданиям
-    if not result_element:
-        result_text = driver.find_element(By.XPATH, "//*[@id='calculator']/div[1]/div").text
-        assert result_text == "15", f"Ожидалось 15, получено {result_text}"
-
-    print("Тест пройден успешно!")
-
-
-if __name__ == "__main__":
-    pytest.main()
+    # Проверка результата
+    result_text = driver.find_element(By.XPATH, "//*[@id='calculator']/div[1]/div").text
+    assert result_text == "15", f"Ожидалось 15, получено {result_text}"

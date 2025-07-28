@@ -48,5 +48,42 @@ def test_form_filling(driver):
     except ElementNotInteractableException:
         driver.execute_script("arguments[0].click();", submit_button)
 
-    # Ждем, пока не появится новое сообщение или подтверждение после отправки формы
+    # Ждем появления результатов валидации
     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "alert-success")))
+
+    # Функция для проверки статуса поля
+    def check_field_status(field_id, expected_class):
+        try:
+            element = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.ID, field_id))
+            )
+            actual_class = element.get_attribute("class")
+            if expected_class in actual_class:
+                print(f"✅ Поле {field_id} имеет ожидаемый статус: {expected_class}")
+                return True
+            else:
+                print(f"❌ Ошибка: поле {field_id} имеет неожиданный статус. Ожидалось: {expected_class}, фактически: {actual_class}")
+                return False
+        except Exception as e:
+            print(f"Ошибка при проверке поля {field_id}: {str(e)}")
+            return False
+
+    # Список полей, которые должны быть зелеными
+    green_fields = [
+        "first-name",
+        "last-name",
+        "address",
+        "e-mail",
+        "phone",
+        "city",
+        "country",
+        "job-position",
+        "company"
+    ]
+
+    # Проверяем зеленые поля
+    for field in green_fields:
+        assert check_field_status(field, "alert-success"), f"Поле {field} не прошло валидацию"
+
+    # Проверяем, что zip-code красное
+    assert check_field_status("zip-code", "alert-danger"), "Поле zip-code не отмечено как невалидное"
